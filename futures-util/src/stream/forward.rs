@@ -90,7 +90,7 @@ where
                 Poll::Ready(Some(Err(e))) => return Poll::Ready(Err(e)),
                 Poll::Ready(None) => {
                     try_ready!(self.as_mut().sink().as_pin_mut().expect(INVALID_POLL)
-                                   .poll_close(lw));
+                                   .poll_flush(lw));
                     return Poll::Ready(Ok(self.as_mut().sink().take().unwrap()))
                 }
                 Poll::Pending => {
