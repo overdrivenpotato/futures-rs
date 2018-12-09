@@ -89,7 +89,6 @@ pub mod compat {
         Future01CompatExt,
         Stream01CompatExt,
         Sink01CompatExt,
-        StreamSink01CompatExt,
     };
 }
 
