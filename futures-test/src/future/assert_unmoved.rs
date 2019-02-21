@@ -1,5 +1,5 @@
 use futures_core::future::Future;
-use futures_core::task::{LocalWaker, Poll};
+use futures_core::task::{Waker, Poll};
 use pin_utils::{unsafe_pinned, unsafe_unpinned};
 use std::marker::PhantomPinned;
 use std::pin::Pin;
@@ -35,7 +35,7 @@ impl<Fut: Future> Future for AssertUnmoved<Fut> {
 
     fn poll(
         mut self: Pin<&mut Self>,
-        lw: &LocalWaker,
+        waker: &Waker,
     ) -> Poll<Self::Output> {
         let cur_this = &*self as *const Self;
         if self.this_ptr.is_null() {
@@ -44,7 +44,7 @@ impl<Fut: Future> Future for AssertUnmoved<Fut> {
         } else {
             assert_eq!(self.this_ptr, cur_this, "Future moved between poll calls");
         }
-        self.as_mut().future().poll(lw)
+        self.as_mut().future().poll(waker)
     }
 }
 
@@ -64,7 +64,7 @@ mod tests {
     use futures_core::future::Future;
     use futures_core::task::Poll;
     use futures_util::future::empty;
-    use futures_util::task::noop_local_waker;
+    use futures_util::task::noop_waker;
     use std::pin::Pin;
 
     use super::AssertUnmoved;
@@ -80,7 +80,7 @@ mod tests {
     #[should_panic(expected = "Future moved between poll calls")]
     fn dont_double_panic() {
         // This test should only panic, not abort the process.
-        let waker = noop_local_waker();
+        let waker = noop_waker();
 
         // First we allocate the future on the stack and poll it.
         let mut future = AssertUnmoved::new(empty::<()>());
